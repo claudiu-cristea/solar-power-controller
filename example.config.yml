@@ -1,0 +1,54 @@
+# Inverter (Huawei SUN2000 via SDongle) configuration
+# Copy this file to config.yml and edit as appropriate.
+
+#  IP of your SDongle on the LAN
+inverter_host: 192.168.0.10
+
+# Modbus TCP port (default 502)
+inverter_port: 502
+
+# Modbus unit/slave ID (usually 1)
+inverter_unit_id: 1
+
+#
+# Huawei quirks
+#
+
+# Huawei SDongle needs a pause after TCP connect
+post_connect_delay_s: 2
+
+#
+# Solar thresholds (hysteresis prevents rapid on/off on cloudy days)
+#
+
+# Start charging above this (Watts)
+start_threshold_w: 1500
+
+# Stop  charging below this (Watts)
+stop_threshold_w: 800
+
+#
+# Loop
+#
+
+# Seconds between inverter queries
+poll_interval_s: 30
+
+#
+# Charger configuration
+#
+# The values below are examples. Use the documentation to find the correct
+# values for your charger.
+#
+
+chargers:
+  SolarPowerController\Charger\DryRun: ~
+  SolarPowerController\Charger\GoE:
+    host: 192.168.0.10
+  SolarPowerController\Charger\GenericHttp:
+    enableUrl: http://192.168.1.102/api/charge/start
+    disableUrl: http://192.168.1.102/api/charge/stop
+
+#
+# Logging
+#

@@ -1,0 +1,21 @@
+{
+    "name": "claudiu-cristea/solar-power-controller",
+    "description": "Reads the live power from a Huawei SUN2000 inverter via Modbus TCP (SDongle on your LAN).",
+    "require": {
+        "php": "8.4",
+        "ext-pcntl": "*",
+        "monolog/monolog": "^3.10",
+        "symfony/yaml": "^8.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SolarPowerController\\": "src"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "platform": {
+            "php": "8.4"
+        }
+    }
+}
