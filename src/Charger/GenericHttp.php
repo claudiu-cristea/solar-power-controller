@@ -10,9 +10,10 @@ namespace SolarPowerController\Charger;
 readonly class GenericHttp extends AbstractCharger
 {
     public function __construct(
-      private string $enableUrl,
-      private string $disableUrl,
-    ) {}
+        private string $enableUrl,
+        private string $disableUrl,
+    ) {
+    }
 
     public function enableCharging(): void
     {
@@ -25,5 +26,4 @@ readonly class GenericHttp extends AbstractCharger
         file_get_contents($this->disableUrl);
         $this->logger->info('HTTP charger: charging DISABLED');
     }
-
 }

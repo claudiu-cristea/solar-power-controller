@@ -9,7 +9,9 @@ namespace SolarPowerController\Charger;
  */
 readonly class GoE extends AbstractCharger
 {
-    public function __construct(private string $host) {}
+    public function __construct(private string $host)
+    {
+    }
 
     private function set(bool $allow): void
     {
@@ -27,5 +29,4 @@ readonly class GoE extends AbstractCharger
     {
         $this->set(false);
     }
-
 }

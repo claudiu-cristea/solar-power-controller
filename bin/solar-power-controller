@@ -1,0 +1,61 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * @file
+ * Controls EV charging based on solar production from a Huawei
+ * SUN2000-10KTL-M1. Reads live power from the inverter via Modbus TCP (SDongle
+ * on your LAN).
+ *
+ * Usage:
+ *   ./bin/solar-power-controller
+ *
+ * Configuration:
+ *   Copy the example.config.yml.dist to config.yml and edit the values to match
+ *   your inverter setup.
+ */
+
+declare(strict_types=1);
+
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
+use Monolog\Logger;
+use SolarPowerController\ModbusTcpApi;
+use SolarPowerController\Controller;
+use Symfony\Component\Yaml\Yaml;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+$config = Yaml::parse(file_get_contents(__DIR__ . '/../config.yml'));
+
+$formatter = new LineFormatter("%datetime% %level_name%: %message%\n", 'Y-m-d H:i');
+$defaultPushHandler = new StreamHandler($config['logger']['default_stream'] ?? 'php://stdout', Level::Info)
+    ->setFormatter($formatter);
+$errorPushHandler = new StreamHandler($config['logger']['error_stream'] ?? 'php://stderr', Level::Warning)
+    ->setFormatter($formatter);
+
+$logger = new Logger('solar_power_controller')
+    ->pushHandler($defaultPushHandler)
+    ->pushHandler($errorPushHandler);
+
+$chargers = [];
+foreach ($config['chargers'] as $class => $chargerConfig) {
+    $chargerConfig ??= [];
+    $chargers[] = new $class(...$chargerConfig)->setLogger($logger);
+}
+
+$api = new ModbusTcpApi(
+    logger: $logger,
+    host: $config['inverter']['host'],
+    port: $config['inverter']['port'],
+    unit: $config['inverter']['unit_id'],
+    postConnectDelay: $config['interval']['post_connect_delay'],
+);
+
+new Controller(
+    chargers: $chargers,
+    config: $config,
+    api: $api,
+    logger: $logger,
+)->run();

@@ -10,14 +10,22 @@ class Controller
 {
     private bool $charging = false;
 
+    public function __construct(
+        private readonly array $chargers,
+        private readonly array $config,
+        private readonly InverterApiInterface $api,
+        private readonly LoggerInterface $logger,
+    ) {
+    }
+
     public function run(): void
     {
         $this->logger->info('Solar EV controller started. Poll every '
-          . $this->config['poll_interval_s'] . 's.');
+          . $this->config['interval']['poll'] . 's.');
         $this->logger->info(sprintf(
-          'Thresholds — start: %d W  stop: %d W',
-          $this->config['start_threshold_w'],
-          $this->config['stop_threshold_w']
+            'Thresholds — start: %d W  stop: %d W',
+            $this->config['charging_threshold']['start'],
+            $this->config['charging_threshold']['stop'],
         ));
 
         // Register shutdown handler so Ctrl+C disables charging cleanly
@@ -31,16 +39,9 @@ class Controller
         while (true) {
             pcntl_signal_dispatch();
             $this->update();
-            sleep($this->config['poll_interval_s']);
+            sleep($this->config['interval']['poll']);
         }
     }
-
-    public function __construct(
-      private readonly ChargerInterface     $charger,
-      private readonly array                $config,
-      private readonly InverterApiInterface $api,
-      private readonly LoggerInterface      $logger,
-    ) {}
 
     private function update(): void
     {
@@ -57,26 +58,33 @@ class Controller
 
         $this->logger->info(sprintf('%d W, Status: %s, Charger: %s', $power, $status, $chargerState));
 
-        if (!$this->charging && $power >= $this->config['start_threshold_w']) {
+        if (!$this->charging && $power >= $this->config['charging_threshold']['start']) {
             $this->logger->info(sprintf(
-              'Production (%d W) >= start threshold (%d W) → ENABLING charging',
-              $power, $this->config['start_threshold_w']
+                'Production (%d W) >= start threshold (%d W) → ENABLING charging',
+                $power,
+                $this->config['charging_threshold']['start'],
             ));
-            $this->charger->enableCharging();
+            foreach ($this->chargers as $charger) {
+                $charger->enableCharging();
+            }
             $this->charging = true;
-
-        } elseif ($this->charging && $power < $this->config['stop_threshold_w']) {
+        } elseif ($this->charging && $power < $this->config['charging_threshold']['stop']) {
             $this->logger->info(sprintf(
-              'Production (%d W) < stop threshold (%d W) → DISABLING charging',
-              $power, $this->config['stop_threshold_w']
+                'Production (%d W) < stop threshold (%d W) → DISABLING charging',
+                $power,
+                $this->config['charging_threshold']['stop']
             ));
-            $this->charger->disableCharging();
+            foreach ($this->chargers as $charger) {
+                $charger->disableCharging();
+            }
             $this->charging = false;
         }
     }
 
     private function shutdown(): void
     {
-        $this->charger->disableCharging();
+        foreach ($this->chargers as $charger) {
+            $charger->disableCharging();
+        }
     }
 }

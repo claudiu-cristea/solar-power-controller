@@ -13,7 +13,6 @@ use SolarPowerController\InverterApiInterface;
  */
 final readonly class ModbusTcpApi implements InverterApiInterface
 {
-
     private const array STATUS_CODES = [
       0x0000 => 'Standby: initialising',
       0x0001 => 'Standby: detecting insulation resistance',
@@ -42,12 +41,13 @@ final readonly class ModbusTcpApi implements InverterApiInterface
     ];
 
     public function __construct(
-      protected LoggerInterface $logger,
-      protected string $host,
-      protected int $port,
-      protected int $unit,
-      protected float $postConnectDelay = 0.0,
-    ) {}
+        protected LoggerInterface $logger,
+        protected string $host,
+        protected int $port,
+        protected int $unit,
+        protected float $postConnectDelay = 0.0,
+    ) {
+    }
 
     public function readInverter(): ?array
     {
@@ -55,13 +55,13 @@ final readonly class ModbusTcpApi implements InverterApiInterface
         // reg). Huawei allows only one Modbus client at a time, so we minimize
         // round-trips.
         $regs = $this->readHoldingRegisters(
-          $this->host,
-          $this->port,
-          $this->unit,
-          32080,
-          10,
-          5,
-          $this->postConnectDelay,
+            $this->host,
+            $this->port,
+            $this->unit,
+            32080,
+            10,
+            5,
+            $this->postConnectDelay,
         );
         if ($regs === false || count($regs) < 10) {
             return null;
@@ -76,20 +76,22 @@ final readonly class ModbusTcpApi implements InverterApiInterface
         $power_w = $raw;
 
         $status_code = $regs[9];
-        $status_text = self::STATUS_CODES[$status_code] ?? sprintf('Unknown (0x%04X)',
-          $status_code);
+        $status_text = self::STATUS_CODES[$status_code] ?? sprintf(
+            'Unknown (0x%04X)',
+            $status_code
+        );
 
         return ['power_w' => $power_w, 'status_text' => $status_text];
     }
 
     private function readHoldingRegisters(
-      string $host,
-      int $port,
-      int $unit_id,
-      int $start_register,
-      int $count,
-      int $timeout_s = 5,
-      float $post_connect_delay_s = 0.0
+        string $host,
+        int $port,
+        int $unit_id,
+        int $start_register,
+        int $count,
+        int $timeout_s = 5,
+        float $post_connect_delay_s = 0.0
     ): array|false {
         $socket = @fsockopen($host, $port, $errno, $errstr, $timeout_s);
         if (!$socket) {
@@ -124,8 +126,10 @@ final readonly class ModbusTcpApi implements InverterApiInterface
             return false;
         }
 
-        $unpacked = unpack('ntx_id/nproto/nlength/Cunit/Cfc/Cbyte_count',
-          $header);
+        $unpacked = unpack(
+            'ntx_id/nproto/nlength/Cunit/Cfc/Cbyte_count',
+            $header
+        );
         $byte_count = $unpacked['byte_count'];
         $fc = $unpacked['fc'];
 
@@ -171,5 +175,4 @@ final readonly class ModbusTcpApi implements InverterApiInterface
         }
         return $buffer;
     }
-
 }

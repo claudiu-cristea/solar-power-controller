@@ -9,7 +9,6 @@ use SolarPowerController\ChargerInterface;
 
 readonly abstract class AbstractCharger implements ChargerInterface
 {
-
     protected LoggerInterface $logger;
 
     public function setLogger(LoggerInterface $logger): static
@@ -17,5 +16,4 @@ readonly abstract class AbstractCharger implements ChargerInterface
         $this->logger = $logger;
         return $this;
     }
-
 }

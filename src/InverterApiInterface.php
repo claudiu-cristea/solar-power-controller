@@ -6,7 +6,5 @@ namespace SolarPowerController;
 
 interface InverterApiInterface
 {
-
     public function readInverter(): ?array;
-
 }
