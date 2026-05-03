@@ -1,3 +1,5 @@
+[![PHPCS](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml/badge.svg)](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml)
+
 Reads the live power from an inverter that supports Modbus TCP API
 
 ## Installation and configuration
