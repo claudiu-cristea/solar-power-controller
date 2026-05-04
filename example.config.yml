@@ -20,8 +20,6 @@ charging_threshold:
 interval:
   # Seconds between inverter queries
   poll: 30
-  # Huawei SDongle needs a pause after TCP connection
-  post_connect_delay: 2
 
 #
 # Chargers
@@ -51,4 +49,5 @@ logger:
 vendor:
   class: SolarPowerController\Vendor\HuaweiSDongle
   params:
+    # Huawei SDongle needs a pause after TCP connection
     postConnectDelay: 2
