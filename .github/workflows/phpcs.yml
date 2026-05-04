@@ -24,4 +24,4 @@ jobs:
         uses: ramsey/composer-install@v3
 
       - name: Run PHPCS
-        run: vendor/bin/phpcs --standard=PSR12 src bin/solar-power-controller
+        run: vendor/bin/phpcs --standard=PSR12 src bin/solar-relay
