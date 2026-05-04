@@ -16,6 +16,8 @@
         "symfony/yaml": "^8.0"
     },
     "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "slevomat/coding-standard": "^8.28",
         "squizlabs/php_codesniffer": "^4.0"
     },
     "autoload": {
@@ -24,6 +26,9 @@
         }
     },
     "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
         "sort-packages": true
     }
 }

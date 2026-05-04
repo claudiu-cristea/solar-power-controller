@@ -49,11 +49,6 @@ readonly final class Config
         return $this->config['interval']['poll'] ?? throw new \RuntimeException('No interval poll configured.');
     }
 
-    public function getShutdownDelay(): int
-    {
-        return $this->config['shutdown_delay'] ?? throw new \RuntimeException('No shutdown delay configured.');
-    }
-
     public function getDefaultLoggerStream(): string
     {
         return $this->config['logger']['stream']['default'] ?? 'php://stdout';

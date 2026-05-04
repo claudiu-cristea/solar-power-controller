@@ -3,12 +3,10 @@
 
 /**
  * @file
- * Controls EV charging based on solar production from a Huawei
- * SUN2000-10KTL-M1. Reads live power from the inverter via Modbus TCP (SDongle
- * on your LAN).
+ * CLI executable.
  *
  * Usage:
- *   ./bin/solar-power-controller
+ *   ./bin/solar-relay
  *
  * Configuration:
  *   Copy the example.config.yml.dist to config.yml and edit the values to match

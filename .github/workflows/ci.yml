@@ -1,4 +1,4 @@
-name: PHPCS
+name: ci
 
 on:
   push:
@@ -6,16 +6,18 @@ on:
   pull_request:
 
 jobs:
-  phpcs:
-    name: PHP_CodeSniffer
+  tests:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php_version: ["8.4", "8.5"]
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: ${{ matrix.php_version }}
           extensions: pcntl
           coverage: none
           tools: composer:v2
@@ -24,4 +26,7 @@ jobs:
         uses: ramsey/composer-install@v3
 
       - name: Run PHPCS
-        run: vendor/bin/phpcs --standard=PSR12 src bin/solar-relay
+        run: vendor/bin/phpcs
+
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyze src bin/solar-relay

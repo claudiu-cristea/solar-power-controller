@@ -6,7 +6,6 @@ namespace SolarRelay\Api;
 
 use Psr\Log\LoggerInterface;
 use SolarRelay\Config;
-use SolarRelay\Api\ModbusTcpApi;
 
 readonly class HuaweiSDongle extends ModbusTcpApi
 {
