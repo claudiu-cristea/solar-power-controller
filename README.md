@@ -1,6 +1,8 @@
 [![PHPCS](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml/badge.svg)](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml)
 
-Reads the live power from an inverter that supports Modbus TCP API
+Reads the live power from an inverter that supports Modbus/TCP API and turns ON
+or OFF a list of configured chargers, depending on whether the measured produced
+power is between the configured thresholds.
 
 ## Installation and configuration
 

@@ -4,6 +4,7 @@ namespace SolarPowerController;
 
 use Psr\Log\LoggerInterface;
 use SolarPowerController\InverterApiInterface;
+use SolarPowerController\Vendor\HuaweiSDongle;
 
 /**
  * Implements just enough of the Modbus TCP spec to read holding registers.
@@ -11,7 +12,7 @@ use SolarPowerController\InverterApiInterface;
  * Frame format: [Transaction ID 2B][Protocol ID 2B][Length 2B][Unit ID 1B]
  *               [Function Code 1B][Start Addr 2B][Quantity 2B]
  */
-final readonly class ModbusTcpApi implements InverterApiInterface
+readonly class ModbusTcpApi implements InverterApiInterface
 {
     private const array STATUS_CODES = [
       0x0000 => 'Standby: initialising',
@@ -41,27 +42,21 @@ final readonly class ModbusTcpApi implements InverterApiInterface
     ];
 
     public function __construct(
+        protected Config $config,
         protected LoggerInterface $logger,
-        protected string $host,
-        protected int $port,
-        protected int $unit,
-        protected float $postConnectDelay = 0.0,
+        protected float $postConnectDelay,
     ) {
     }
 
-    public function readInverter(): ?array
+    public function getOutput(): ?InverterOutput
     {
         // Read 32080..32089 in one shot: power (2 regs) + 7 unused + status (1
         // reg). Huawei allows only one Modbus client at a time, so we minimize
         // round-trips.
         $regs = $this->readHoldingRegisters(
-            $this->host,
-            $this->port,
-            $this->unit,
+            // TBD
             32080,
             10,
-            5,
-            $this->postConnectDelay,
         );
         if ($regs === false || count($regs) < 10) {
             return null;
@@ -73,37 +68,46 @@ final readonly class ModbusTcpApi implements InverterApiInterface
             // Two's complement for negative values.
             $raw -= 0x100000000;
         }
-        $power_w = $raw;
+        $power = $raw;
 
-        $status_code = $regs[9];
-        $status_text = self::STATUS_CODES[$status_code] ?? sprintf(
+        $statusCode = $regs[9];
+        $statusText = self::STATUS_CODES[$statusCode] ?? sprintf(
             'Unknown (0x%04X)',
-            $status_code
+            $statusCode
         );
 
-        return ['power_w' => $power_w, 'status_text' => $status_text];
+        return new InverterOutput(power: $power, status: $statusText);
     }
 
     private function readHoldingRegisters(
-        string $host,
-        int $port,
-        int $unit_id,
+        // TBD
         int $start_register,
         int $count,
         int $timeout_s = 5,
-        float $post_connect_delay_s = 0.0
     ): array|false {
-        $socket = @fsockopen($host, $port, $errno, $errstr, $timeout_s);
+        $socket = @fsockopen(
+            $this->config->getInverterHost(),
+            $this->config->getInverterPort(),
+            $errno,
+            $errstr,
+            $timeout_s,
+        );
         if (!$socket) {
-            $this->logger->error("Cannot connect to $host:$port — $errstr ($errno)");
+            $this->logger->error(sprintf(
+                'Cannot connect to %s:%d — %s (%d)',
+                $this->config->getInverterHost(),
+                $this->config->getInverterPort(),
+                $errstr,
+                $errno,
+            ));
             return false;
         }
 
         stream_set_timeout($socket, $timeout_s);
 
         // Huawei SDongle drops the connection if you write too soon after connect.
-        if ($post_connect_delay_s > 0) {
-            usleep((int)($post_connect_delay_s * 1_000_000));
+        if ($this->postConnectDelay > 0) {
+            usleep((int) ($this->postConnectDelay * 1_000_000));
         }
 
         // MBAP header = TxID(2) + ProtoID(2) + Length(2) + UnitID(1)
@@ -113,7 +117,7 @@ final readonly class ModbusTcpApi implements InverterApiInterface
         $function_code = 0x03;   // Read Holding Registers
 
         $request = pack('nnn', $transaction_id, $protocol_id, 6)
-          . pack('CCnn', $unit_id, $function_code, $start_register, $count);
+          . pack('CCnn', $this->config->getUnitId(), $function_code, $start_register, $count);
 
         fwrite($socket, $request);
 

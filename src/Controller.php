@@ -9,23 +9,21 @@ use Psr\Log\LoggerInterface;
 class Controller
 {
     private bool $charging = false;
+    private array $chargers;
 
     public function __construct(
-        private readonly array $chargers,
-        private readonly array $config,
-        private readonly InverterApiInterface $api,
+        private readonly Config $config,
         private readonly LoggerInterface $logger,
     ) {
     }
 
     public function run(): void
     {
-        $this->logger->info('Solar EV controller started. Poll every '
-          . $this->config['interval']['poll'] . 's.');
+        $this->logger->info("Solar EV controller started. Poll every {$this->config->getPollInterval()}s.");
         $this->logger->info(sprintf(
             'Thresholds — start: %d W  stop: %d W',
-            $this->config['charging_threshold']['start'],
-            $this->config['charging_threshold']['stop'],
+            $this->config->getStartThreshold(),
+            $this->config->getStopThreshold(),
         ));
 
         // Register shutdown handler so Ctrl+C disables charging cleanly
@@ -39,42 +37,42 @@ class Controller
         while (true) {
             pcntl_signal_dispatch();
             $this->update();
-            sleep($this->config['interval']['poll']);
+            sleep($this->config->getPollInterval());
         }
     }
 
     private function update(): void
     {
-        $data = $this->api->readInverter();
+        $data = $this->getApi()->getOutput();
 
         if ($data === null) {
             $this->logger->warning('Could not read inverter — keeping current charger state.');
             return;
         }
 
-        $power       = $data['power_w'];
-        $status      = $data['status_text'];
-        $chargerState = $this->charging ? 'ON' : 'OFF';
+        $state = $this->charging ? 'ON' : 'OFF';
 
-        $this->logger->info(sprintf('%d W, Status: %s, Charger: %s', $power, $status, $chargerState));
+        $this->logger->info("$data->power W, Status: $data->status, Charger: $state");
 
-        if (!$this->charging && $power >= $this->config['charging_threshold']['start']) {
-            $this->logger->info(sprintf(
-                'Production (%d W) >= start threshold (%d W) → ENABLING charging',
-                $power,
-                $this->config['charging_threshold']['start'],
-            ));
-            foreach ($this->chargers as $charger) {
+        if (!$this->charging && $data->power >= $this->config->getStartThreshold()) {
+            $this->logger->info(
+                sprintf(
+                    'Production (%d W) >= start threshold (%d W) → ENABLING charging',
+                    $data->power,
+                    $this->config->getStartThreshold(),
+                )
+            );
+            foreach ($this->getChargers() as $charger) {
                 $charger->enableCharging();
             }
             $this->charging = true;
-        } elseif ($this->charging && $power < $this->config['charging_threshold']['stop']) {
+        } elseif ($this->charging && $data->power < $this->config->getStopThreshold()) {
             $this->logger->info(sprintf(
                 'Production (%d W) < stop threshold (%d W) → DISABLING charging',
-                $power,
-                $this->config['charging_threshold']['stop']
+                $data->power,
+                $this->config->getStopThreshold(),
             ));
-            foreach ($this->chargers as $charger) {
+            foreach ($this->getChargers() as $charger) {
                 $charger->disableCharging();
             }
             $this->charging = false;
@@ -83,8 +81,33 @@ class Controller
 
     private function shutdown(): void
     {
-        foreach ($this->chargers as $charger) {
+        foreach ($this->getChargers() as $charger) {
             $charger->disableCharging();
         }
+    }
+
+    public function getApi(): InverterApiInterface
+    {
+        $class = $this->config->getApiClass();
+        $params = $this->config->getApiParams() + [
+            'config' => $this->config,
+            'logger' => $this->logger,
+        ];
+        return new $class(...$params);
+    }
+
+    /**
+     * @return \SolarPowerController\Charger\ChargerInterface[]
+     */
+    public function getChargers(): array
+    {
+        if (!isset($this->chargers)) {
+            $this->chargers = [];
+            foreach ($this->config->getChargers() as $class => $params) {
+                $params ??= [];
+                $this->chargers[] = new $class(...$params)->setLogger($this->logger);
+            }
+        }
+        return $this->chargers;
     }
 }

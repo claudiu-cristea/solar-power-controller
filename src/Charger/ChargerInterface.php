@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController;
+namespace SolarPowerController\Charger;
 
 use Psr\Log\LoggerInterface;
 

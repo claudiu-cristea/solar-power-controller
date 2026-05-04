@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SolarPowerController\Charger;
 
 use Psr\Log\LoggerInterface;
-use SolarPowerController\ChargerInterface;
 
 readonly abstract class AbstractCharger implements ChargerInterface
 {

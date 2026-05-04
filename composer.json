@@ -1,6 +1,6 @@
 {
     "name": "claudiu-cristea/solar-power-controller",
-    "description": "Reads the live power from a Huawei SUN2000 inverter via Modbus TCP (SDongle on your LAN).",
+    "description": "Reads the live power from an inverter that supports Modbus/TCP API and turns ON or OFF a list of configured chargers, depending on whether the measured produced power is between the configured thresholds.",
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -21,18 +21,17 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
-use SolarPowerController\ModbusTcpApi;
+use SolarPowerController\Config;
 use SolarPowerController\Controller;
-use Symfony\Component\Yaml\Yaml;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$config = Yaml::parse(file_get_contents(__DIR__ . '/../config.yml'));
+$config = Config::fromFile(__DIR__ . '/../config.yml');
 
 $formatter = new LineFormatter("%datetime% %level_name%: %message%\n", 'Y-m-d H:i');
-$defaultPushHandler = new StreamHandler($config['logger']['default_stream'] ?? 'php://stdout', Level::Info)
+$defaultPushHandler = new StreamHandler($config->getDefaultLoggerStream(), Level::Info)
     ->setFormatter($formatter);
-$errorPushHandler = new StreamHandler($config['logger']['error_stream'] ?? 'php://stderr', Level::Warning)
+$errorPushHandler = new StreamHandler($config->getErrorLoggerStream(), Level::Warning)
     ->setFormatter($formatter);
 
 $logger = new Logger('solar_power_controller')
@@ -40,22 +39,9 @@ $logger = new Logger('solar_power_controller')
     ->pushHandler($errorPushHandler);
 
 $chargers = [];
-foreach ($config['chargers'] as $class => $chargerConfig) {
+foreach ($config->getChargers() as $class => $chargerConfig) {
     $chargerConfig ??= [];
     $chargers[] = new $class(...$chargerConfig)->setLogger($logger);
 }
 
-$api = new ModbusTcpApi(
-    logger: $logger,
-    host: $config['inverter']['host'],
-    port: $config['inverter']['port'],
-    unit: $config['inverter']['unit_id'],
-    postConnectDelay: $config['interval']['post_connect_delay'],
-);
-
-new Controller(
-    chargers: $chargers,
-    config: $config,
-    api: $api,
-    logger: $logger,
-)->run();
+new Controller(config: $config, logger: $logger)->run();

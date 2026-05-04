@@ -44,5 +44,11 @@ chargers:
 # Logging
 #
 logger:
-  default_stream: php://stdout
-  error_stream: /var/log/solar-power-controller/error.log
+  stream:
+    default: php://stdout
+    error: /var/log/solar-power-controller/error.log
+
+vendor:
+  class: SolarPowerController\Vendor\HuaweiSDongle
+  params:
+    postConnectDelay: 2
