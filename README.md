@@ -1,4 +1,4 @@
-[![PHPCS](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml/badge.svg)](https://github.com/claudiu-cristea/solar-power-controller/actions/workflows/phpcs.yml)
+[![PHPCS](https://github.com/claudiu-cristea/solar-relay/actions/workflows/ci.yml/badge.svg)](https://github.com/claudiu-cristea/solar-relay/actions/workflows/ci.yml)
 
 Reads the live power from an inverter that supports Modbus/TCP API and turns ON
 or OFF a list of configured relays, depending on whether the measured produced
