@@ -1,6 +1,6 @@
 {
-    "name": "claudiu-cristea/solar-power-controller",
-    "description": "Reads the live power from an inverter that supports Modbus/TCP API and turns ON or OFF a list of configured chargers, depending on whether the measured produced power is between the configured thresholds.",
+    "name": "claudiu-cristea/solar-relay",
+    "description": "Reads the live power from an inverter that supports Modbus/TCP API and turns ON or OFF a list of configured relays, depending on whether the measured produced power is between the configured thresholds.",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -20,7 +20,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SolarPowerController\\": "src"
+            "SolarRelay\\": "src"
         }
     },
     "config": {

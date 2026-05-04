@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController;
+namespace SolarRelay;
 
 use Psr\Log\LoggerInterface;
+use SolarRelay\Api\ApiInterface;
 
 class Controller
 {
     private bool $charging = false;
-    private array $chargers;
+    private array $relays;
 
     public function __construct(
         private readonly Config $config,
@@ -43,7 +44,7 @@ class Controller
 
     private function update(): void
     {
-        $data = $this->getApi()->getOutput();
+        $data = $this->getApi()->getPower();
 
         if ($data === null) {
             $this->logger->warning('Could not read inverter — keeping current charger state.');
@@ -62,7 +63,7 @@ class Controller
                     $this->config->getStartThreshold(),
                 )
             );
-            foreach ($this->getChargers() as $charger) {
+            foreach ($this->getRelays() as $charger) {
                 $charger->enableCharging();
             }
             $this->charging = true;
@@ -72,7 +73,7 @@ class Controller
                 $data->power,
                 $this->config->getStopThreshold(),
             ));
-            foreach ($this->getChargers() as $charger) {
+            foreach ($this->getRelays() as $charger) {
                 $charger->disableCharging();
             }
             $this->charging = false;
@@ -81,12 +82,12 @@ class Controller
 
     private function shutdown(): void
     {
-        foreach ($this->getChargers() as $charger) {
+        foreach ($this->getRelays() as $charger) {
             $charger->disableCharging();
         }
     }
 
-    public function getApi(): InverterApiInterface
+    public function getApi(): ApiInterface
     {
         $class = $this->config->getApiClass();
         $params = $this->config->getApiParams() + [
@@ -97,17 +98,17 @@ class Controller
     }
 
     /**
-     * @return \SolarPowerController\Charger\ChargerInterface[]
+     * @return \SolarRelay\Relay\RelayInterface[]
      */
-    public function getChargers(): array
+    public function getRelays(): array
     {
-        if (!isset($this->chargers)) {
-            $this->chargers = [];
-            foreach ($this->config->getChargers() as $class => $params) {
+        if (!isset($this->relays)) {
+            $this->relays = [];
+            foreach ($this->config->getRelays() as $class => $params) {
                 $params ??= [];
-                $this->chargers[] = new $class(...$params)->setLogger($this->logger);
+                $this->relays[] = new $class(...$params)->setLogger($this->logger);
             }
         }
-        return $this->chargers;
+        return $this->relays;
     }
 }

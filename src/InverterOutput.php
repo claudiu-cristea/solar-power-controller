@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController;
+namespace SolarRelay;
 
 readonly class InverterOutput
 {

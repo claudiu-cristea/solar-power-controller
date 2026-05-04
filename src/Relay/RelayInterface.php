@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController\Charger;
+namespace SolarRelay\Relay;
 
 use Psr\Log\LoggerInterface;
 
-interface ChargerInterface
+interface RelayInterface
 {
     public function enableCharging(): void;
     public function disableCharging(): void;

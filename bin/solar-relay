@@ -21,8 +21,8 @@ use Monolog\Formatter\LineFormatter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
-use SolarPowerController\Config;
-use SolarPowerController\Controller;
+use SolarRelay\Config;
+use SolarRelay\Controller;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -37,11 +37,5 @@ $errorPushHandler = new StreamHandler($config->getErrorLoggerStream(), Level::Wa
 $logger = new Logger('solar_power_controller')
     ->pushHandler($defaultPushHandler)
     ->pushHandler($errorPushHandler);
-
-$chargers = [];
-foreach ($config->getChargers() as $class => $chargerConfig) {
-    $chargerConfig ??= [];
-    $chargers[] = new $class(...$chargerConfig)->setLogger($logger);
-}
 
 new Controller(config: $config, logger: $logger)->run();

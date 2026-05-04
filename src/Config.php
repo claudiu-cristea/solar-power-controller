@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController;
+namespace SolarRelay;
 
 use Symfony\Component\Yaml\Yaml;
 
@@ -64,9 +64,9 @@ readonly final class Config
         return $this->config['logger']['stream']['error'] ?? 'php://stderr';
     }
 
-    public function getChargers(): array
+    public function getRelays(): array
     {
-        return $this->config['chargers'] ?? [];
+        return $this->config['relays'] ?? [];
     }
 
     public function getApiClass(): string

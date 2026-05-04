@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController\Charger;
+namespace SolarRelay\Relay;
 
 use Psr\Log\LoggerInterface;
 
-readonly abstract class AbstractCharger implements ChargerInterface
+readonly abstract class AbstractRelay implements RelayInterface
 {
     protected LoggerInterface $logger;
 

@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController\Charger;
+namespace SolarRelay\Relay;
 
 /**
  * Generic HTTP charger (simple GET to start/stop URLs)
  */
-readonly class GenericHttp extends AbstractCharger
+readonly class GenericHttp extends AbstractRelay
 {
     public function __construct(
         private string $enableUrl,

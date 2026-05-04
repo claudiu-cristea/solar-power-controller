@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController\Charger;
+namespace SolarRelay\Relay;
 
 /**
  * go-e Charger (v2 HTTP API)
  */
-readonly class GoE extends AbstractCharger
+readonly class GoE extends AbstractRelay
 {
     public function __construct(private string $host)
     {

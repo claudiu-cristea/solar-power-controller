@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace SolarPowerController\Charger;
+namespace SolarRelay\Relay;
 
 /**
  * Dry-run/simulation (no real charger, just logs)
  */
-readonly class DryRun extends AbstractCharger
+readonly class DryRun extends AbstractRelay
 {
     public function enableCharging(): void
     {

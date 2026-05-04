@@ -29,12 +29,12 @@ interval:
 # constructor.
 
 # The values below are examples. Use the documentation to find the correct
-# values for your charger.
-chargers:
-  SolarPowerController\Charger\DryRun: ~
-  SolarPowerController\Charger\GoE:
+# values for your relay.
+relays:
+  SolarRelay\Relay\DryRun: ~
+  SolarRelay\Relay\GoE:
     host: 192.168.0.10
-  SolarPowerController\Charger\GenericHttp:
+  SolarRelay\Relay\GenericHttp:
     enableUrl: http://192.168.1.102/api/charge/start
     disableUrl: http://192.168.1.102/api/charge/stop
 
@@ -46,8 +46,9 @@ logger:
     default: php://stdout
     error: /var/log/solar-power-controller/error.log
 
-vendor:
-  class: SolarPowerController\Vendor\HuaweiSDongle
+# The API to use to communicate with the inverter.
+api:
+  class: SolarRelay\Api\HuaweiSDongle
   params:
     # Huawei SDongle needs a pause after TCP connection
     postConnectDelay: 2

@@ -1,10 +1,12 @@
 <?php
 
-namespace SolarPowerController;
+declare(strict_types=1);
+
+namespace SolarRelay\Api;
 
 use Psr\Log\LoggerInterface;
-use SolarPowerController\InverterApiInterface;
-use SolarPowerController\Vendor\HuaweiSDongle;
+use SolarRelay\Config;
+use SolarRelay\InverterOutput;
 
 /**
  * Implements just enough of the Modbus TCP spec to read holding registers.
@@ -12,7 +14,7 @@ use SolarPowerController\Vendor\HuaweiSDongle;
  * Frame format: [Transaction ID 2B][Protocol ID 2B][Length 2B][Unit ID 1B]
  *               [Function Code 1B][Start Addr 2B][Quantity 2B]
  */
-readonly class ModbusTcpApi implements InverterApiInterface
+readonly class ModbusTcpApi implements ApiInterface
 {
     private const array STATUS_CODES = [
       0x0000 => 'Standby: initialising',
@@ -44,11 +46,10 @@ readonly class ModbusTcpApi implements InverterApiInterface
     public function __construct(
         protected Config $config,
         protected LoggerInterface $logger,
-        protected float $postConnectDelay,
     ) {
     }
 
-    public function getOutput(): ?InverterOutput
+    public function getPower(): ?InverterOutput
     {
         // Read 32080..32089 in one shot: power (2 regs) + 7 unused + status (1
         // reg). Huawei allows only one Modbus client at a time, so we minimize
@@ -79,36 +80,14 @@ readonly class ModbusTcpApi implements InverterApiInterface
         return new InverterOutput(power: $power, status: $statusText);
     }
 
-    private function readHoldingRegisters(
+    protected function readHoldingRegisters(
         // TBD
         int $start_register,
         int $count,
         int $timeout_s = 5,
     ): array|false {
-        $socket = @fsockopen(
-            $this->config->getInverterHost(),
-            $this->config->getInverterPort(),
-            $errno,
-            $errstr,
-            $timeout_s,
-        );
-        if (!$socket) {
-            $this->logger->error(sprintf(
-                'Cannot connect to %s:%d — %s (%d)',
-                $this->config->getInverterHost(),
-                $this->config->getInverterPort(),
-                $errstr,
-                $errno,
-            ));
-            return false;
-        }
-
-        stream_set_timeout($socket, $timeout_s);
-
-        // Huawei SDongle drops the connection if you write too soon after connect.
-        if ($this->postConnectDelay > 0) {
-            usleep((int) ($this->postConnectDelay * 1_000_000));
-        }
+        $socket = $this->connect($timeout_s);
+        $this->postConnect($socket);
 
         // MBAP header = TxID(2) + ProtoID(2) + Length(2) + UnitID(1)
         // PDU         = FC(1) + StartAddr(2) + Qty(2)
@@ -163,11 +142,39 @@ readonly class ModbusTcpApi implements InverterApiInterface
         return $registers;
     }
 
+    protected function connect(int $timeout_s)
+    {
+        $socket = @fsockopen(
+            $this->config->getInverterHost(),
+            $this->config->getInverterPort(),
+            $errno,
+            $errstr,
+            $timeout_s,
+        );
+        if (!$socket) {
+            $this->logger->error(sprintf(
+                'Cannot connect to %s:%d — %s (%d)',
+                $this->config->getInverterHost(),
+                $this->config->getInverterPort(),
+                $errstr,
+                $errno,
+            ));
+            return false;
+        }
+        stream_set_timeout($socket, $timeout_s);
+
+        return $socket;
+    }
+
+    protected function postConnect($socket): void
+    {
+    }
+
     /**
      * Read exactly $n bytes from $socket, looping over short reads. Returns
      * false on timeout/EOF before $n bytes are available.
      */
-    private function readExact($socket, int $n): string|false
+    protected function readExact($socket, int $n): string|false
     {
         $buffer = '';
         while (strlen($buffer) < $n) {
