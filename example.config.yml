@@ -44,7 +44,7 @@ relays:
 logger:
   stream:
     default: php://stdout
-    error: /var/log/solar-power-controller/error.log
+    error: /var/log/solar-relay/error.log
 
 # The API to use to communicate with the inverter.
 api:

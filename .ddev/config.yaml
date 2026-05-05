@@ -1,6 +1,6 @@
 # See https://docs.ddev.com/en/stable/users/configuration/config/
 
-name: solar-power-controller
+name: solar-relay
 type: php
 docroot: ""
 php_version: "8.4"
