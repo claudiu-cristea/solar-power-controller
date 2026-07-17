@@ -106,7 +106,7 @@ class Controller
             $this->relays = [];
             foreach ($this->config->getRelays() as $class => $params) {
                 $params ??= [];
-                if (array_is_list($params)) {
+                if (!empty($params) && array_is_list($params)) {
                     throw new \RuntimeException("Relay $class parameters must be an associative array.");
                 }
                 $params += ['logger' => $this->logger];
